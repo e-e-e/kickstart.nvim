@@ -730,23 +730,15 @@ require('lazy').setup({
         'stylua', -- Used to format Lua code
       })
       require('mason-tool-installer').setup { ensure_installed = ensure_installed }
-      local lspconfig = require 'lspconfig'
-      require('mason-lspconfig').setup {
-        ensure_installed = {}, -- explicitly set to an empty table (Kickstart populates installs via mason-tool-installer)
-        automatic_installation = false,
-        handlers = {
-          function(server_name)
-            local server = servers[server_name] or {}
-            -- This handles overriding only values explicitly passed
-            -- by the server configuration above. Useful when disabling
-            -- certain features of an LSP (for example, turning off formatting for ts_ls)
-            server.capabilities = vim.tbl_deep_extend('force', {}, capabilities, server.capabilities or {})
-            lspconfig[server_name].setup(server)
-          end,
-        },
-      }
-      lspconfig.sourcekit.setup {
-        -- capabilities = capabilities,
+
+      -- Configure LSP servers using the new Neovim 0.11+ API
+      for server_name, server_config in pairs(servers) do
+        server_config.capabilities = vim.tbl_deep_extend('force', {}, capabilities, server_config.capabilities or {})
+        vim.lsp.config(server_name, server_config)
+      end
+
+      -- Configure sourcekit for Swift
+      vim.lsp.config('sourcekit', {
         capabilities = {
           workspace = {
             didChangeWatchedFiles = {
@@ -754,6 +746,15 @@ require('lazy').setup({
             },
           },
         },
+      })
+
+      -- Enable all configured LSP servers
+      vim.lsp.enable(vim.tbl_keys(servers))
+      vim.lsp.enable('sourcekit')
+
+      require('mason-lspconfig').setup {
+        ensure_installed = {}, -- explicitly set to an empty table (Kickstart populates installs via mason-tool-installer)
+        automatic_installation = false,
       }
     end,
   },

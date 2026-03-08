@@ -2,6 +2,8 @@
 
 local keymap = vim.keymap.set
 
+keymap('n', ';', ':', { noremap = true })
+
 -- auto select block
 keymap('n', '<leader>e', 'V$%', { desc = 'Select chunk' })
 keymap('v', '<leader>e', '$%', { desc = 'Continue select chunk' })
